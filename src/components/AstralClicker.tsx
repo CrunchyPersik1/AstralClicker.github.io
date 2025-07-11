@@ -36,7 +36,8 @@ const AstralClicker: React.FC = () => {
   const upgradesWithCurrentStats = initialUpgrades.map(upgradeDef => {
     const level = purchasedUpgradeLevels.get(upgradeDef.id) || 0;
     const currentCost = Math.floor(upgradeDef.baseCost * Math.pow(upgradeDef.costMultiplier, level));
-    const currentEffectValue = Math.floor(upgradeDef.baseEffectValue * Math.pow(upgradeDef.effectMultiplier, level));
+    // ИЗМЕНЕНИЕ ЗДЕСЬ: Эффект теперь линейно зависит от уровня
+    const currentEffectValue = upgradeDef.baseEffectValue * level; 
     return {
       id: upgradeDef.id,
       name: upgradeDef.name,
@@ -110,7 +111,8 @@ const AstralClicker: React.FC = () => {
     initialUpgrades.forEach(upgradeDef => {
       const level = purchasedUpgradeLevels.get(upgradeDef.id) || 0;
       if (level > 0) {
-        const effectValue = Math.floor(upgradeDef.baseEffectValue * Math.pow(upgradeDef.effectMultiplier, level));
+        // ИЗМЕНЕНИЕ ЗДЕСЬ: Эффект теперь линейно зависит от уровня
+        const effectValue = upgradeDef.baseEffectValue * level; 
         if (upgradeDef.type === 'click') {
           totalClickEffect += effectValue;
         } else if (upgradeDef.type === 'passive') {
