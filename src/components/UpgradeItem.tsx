@@ -8,11 +8,12 @@ interface Upgrade {
   id: string;
   name: string;
   description: string;
-  cost: number;
+  cost: number; // Это будет текущая рассчитанная стоимость
   effect: {
     type: 'click' | 'passive';
-    value: number;
+    value: number; // Это будет текущее рассчитанное значение эффекта
   };
+  level: number; // Текущий уровень улучшения
 }
 
 interface UpgradeItemProps {
@@ -27,7 +28,7 @@ const UpgradeItem: React.FC<UpgradeItemProps> = ({ upgrade, currentAstral, onPur
   return (
     <Card className="w-full max-w-sm bg-gray-700/70 backdrop-blur-sm border-gray-600 shadow-md rounded-lg">
       <CardHeader>
-        <CardTitle className="text-lg text-purple-300">{upgrade.name}</CardTitle>
+        <CardTitle className="text-lg text-purple-300">{upgrade.name} (Ур. {upgrade.level})</CardTitle>
         <CardDescription className="text-sm text-gray-300">{upgrade.description}</CardDescription>
       </CardHeader>
       <CardContent>

@@ -8,18 +8,18 @@ import UpgradeItem from './UpgradeItem';
 import CosmeticShop from './CosmeticShop';
 import ClickParticle from './ClickParticle';
 import FallingCookie from './FallingCookie';
-import AchievementsList from './AchievementsList'; // Импортируем новый компонент
+import AchievementsList from './AchievementsList';
 import { showSuccess, showError } from '@/utils/toast';
 
-interface Upgrade {
+interface UpgradeDefinition {
   id: string;
   name: string;
   description: string;
-  cost: number;
-  effect: {
-    type: 'click' | 'passive';
-    value: number;
-  };
+  type: 'click' | 'passive';
+  baseCost: number;
+  costMultiplier: number;
+  baseEffectValue: number;
+  effectMultiplier: number;
 }
 
 interface Cosmetic {
@@ -39,24 +39,24 @@ interface Achievement {
     astralCount: number;
     astralPerClick: number;
     astralPerSecond: number;
-    purchasedUpgrades: Set<string>;
+    purchasedUpgradeLevels: Map<string, number>; // Изменено на Map
     purchasedCosmetics: Set<string>;
   }) => boolean;
 }
 
-const initialUpgrades: Upgrade[] = [
-  { id: 'click1', name: 'Астральный Всплеск', description: 'Увеличивает Астрал за клик.', cost: 15, effect: { type: 'click', value: 1 } },
-  { id: 'passive1', name: 'Звездная Пыль', description: 'Начинает производить 1 Астрал в секунду.', cost: 100, effect: { type: 'passive', value: 1 } },
-  { id: 'click2', name: 'Космический Импульс', description: 'Значительно увеличивает Астрал за клик.', cost: 100, effect: { type: 'click', value: 5 } },
-  { id: 'passive2', name: 'Малая Туманность', description: 'Добавляет 5 Астрала в секунду.', cost: 500, effect: { type: 'passive', value: 5 } },
-  { id: 'click3', name: 'Галактический Удар', description: 'Огромное увеличение Астрала за клик!', cost: 1000, effect: { type: 'click', value: 20 } },
-  { id: 'passive3', name: 'Кварковая Фабрика', description: 'Добавляет 20 Астрала в секунду.', cost: 2500, effect: { type: 'passive', value: 20 } },
-  { id: 'passive4', name: 'Черная Дыра', description: 'Производит 100 Астрала в секунду.', cost: 10000, effect: { type: 'passive', value: 100 } },
-  { id: 'click4', name: 'Вселенский Клик', description: 'Невероятное увеличение Астрала за клик!', cost: 5000, effect: { type: 'click', value: 50 } },
-  { id: 'passive5', name: 'Мультивселенная', description: 'Производит 500 Астрала в секунду.', cost: 50000, effect: { type: 'passive', value: 500 } },
-  { id: 'passive6', name: 'Измерение Хаоса', description: 'Производит 2500 Астрала в секунду.', cost: 250000, effect: { type: 'passive', value: 2500 } },
-  { id: 'click5', name: 'Божественный Клик', description: 'Максимальное увеличение Астрала за клик!', cost: 100000, effect: { type: 'click', value: 1000 } },
-  { id: 'passive7', name: 'Космический Разум', description: 'Производит 10000 Астрала в секунду.', cost: 1000000, effect: { type: 'passive', value: 10000 } },
+const initialUpgrades: UpgradeDefinition[] = [
+  { id: 'click1', name: 'Астральный Всплеск', description: 'Увеличивает Астрал за клик.', type: 'click', baseCost: 15, costMultiplier: 1.15, baseEffectValue: 1, effectMultiplier: 1.1 },
+  { id: 'passive1', name: 'Звездная Пыль', description: 'Начинает производить Астрал в секунду.', type: 'passive', baseCost: 100, costMultiplier: 1.15, baseEffectValue: 1, effectMultiplier: 1.1 },
+  { id: 'click2', name: 'Космический Импульс', description: 'Значительно увеличивает Астрал за клик.', type: 'click', baseCost: 100, costMultiplier: 1.15, baseEffectValue: 5, effectMultiplier: 1.1 },
+  { id: 'passive2', name: 'Малая Туманность', description: 'Добавляет Астрала в секунду.', type: 'passive', baseCost: 500, costMultiplier: 1.15, baseEffectValue: 5, effectMultiplier: 1.1 },
+  { id: 'click3', name: 'Галактический Удар', description: 'Огромное увеличение Астрала за клик!', type: 'click', baseCost: 1000, costMultiplier: 1.15, baseEffectValue: 20, effectMultiplier: 1.1 },
+  { id: 'passive3', name: 'Кварковая Фабрика', description: 'Добавляет Астрала в секунду.', type: 'passive', baseCost: 2500, costMultiplier: 1.15, baseEffectValue: 20, effectMultiplier: 1.1 },
+  { id: 'passive4', name: 'Черная Дыра', description: 'Производит Астрала в секунду.', type: 'passive', baseCost: 10000, costMultiplier: 1.15, baseEffectValue: 100, effectMultiplier: 1.1 },
+  { id: 'click4', name: 'Вселенский Клик', description: 'Невероятное увеличение Астрала за клик!', type: 'click', baseCost: 5000, costMultiplier: 1.15, baseEffectValue: 50, effectMultiplier: 1.1 },
+  { id: 'passive5', name: 'Мультивселенная', description: 'Производит Астрала в секунду.', type: 'passive', baseCost: 50000, costMultiplier: 1.15, baseEffectValue: 500, effectMultiplier: 1.1 },
+  { id: 'passive6', name: 'Измерение Хаоса', description: 'Производит Астрала в секунду.', type: 'passive', baseCost: 250000, costMultiplier: 1.15, baseEffectValue: 2500, effectMultiplier: 1.1 },
+  { id: 'click5', name: 'Божественный Клик', description: 'Максимальное увеличение Астрала за клик!', type: 'click', baseCost: 100000, costMultiplier: 1.15, baseEffectValue: 1000, effectMultiplier: 1.1 },
+  { id: 'passive7', name: 'Космический Разум', description: 'Производит Астрала в секунду.', type: 'passive', baseCost: 1000000, costMultiplier: 1.15, baseEffectValue: 10000, effectMultiplier: 1.1 },
 ];
 
 const initialCosmetics: Cosmetic[] = [
@@ -81,8 +81,8 @@ const allAchievements: Achievement[] = [
   { id: 'astral_10000', name: 'Мастер Астрала', description: 'Накопите 10,000 Астрала.', condition: (state) => state.astralCount >= 10000 },
   { id: 'astral_per_second_10', name: 'Пассивный Доход', description: 'Достигните 10 Астрала в секунду.', condition: (state) => state.astralPerSecond >= 10 },
   { id: 'astral_per_second_100', name: 'Астральный Поток', description: 'Достигните 100 Астрала в секунду.', condition: (state) => state.astralPerSecond >= 100 },
-  { id: 'upgrades_3', name: 'Первые Шаги', description: 'Купите 3 улучшения.', condition: (state) => state.purchasedUpgrades.size >= 3 },
-  { id: 'upgrades_10', name: 'Опытный Инвестор', description: 'Купите 10 улучшений.', condition: (state) => state.purchasedUpgrades.size >= 10 },
+  { id: 'upgrades_3', name: 'Первые Шаги', description: 'Купите 3 уровня улучшений.', condition: (state) => Array.from(state.purchasedUpgradeLevels.values()).reduce((sum, level) => sum + level, 0) >= 3 },
+  { id: 'upgrades_10', name: 'Опытный Инвестор', description: 'Купите 10 уровней улучшений.', condition: (state) => Array.from(state.purchasedUpgradeLevels.values()).reduce((sum, level) => sum + level, 0) >= 10 },
   { id: 'cosmetic_1', name: 'Модник', description: 'Купите 1 косметический предмет (кроме стартовых).', condition: (state) => state.purchasedCosmetics.size > 2 }, // bg_default and skin_default are 2
   { id: 'cosmetic_all_backgrounds', name: 'Коллекционер Фонов', description: 'Купите все фоны.', condition: (state) => {
     const allBackgrounds = initialCosmetics.filter(c => c.type === 'background' && c.cost !== 0);
@@ -105,7 +105,7 @@ const AstralClicker: React.FC = () => {
   const [astralCount, setAstralCount] = useState<number>(0);
   const [astralPerClick, setAstralPerClick] = useState<number>(1);
   const [astralPerSecond, setAstralPerSecond] = useState<number>(0);
-  const [purchasedUpgrades, setPurchasedUpgrades] = useState<Set<string>>(new Set());
+  const [purchasedUpgradeLevels, setPurchasedUpgradeLevels] = useState<Map<string, number>>(new Map()); // Изменено на Map
   const [purchasedCosmetics, setPurchasedCosmetics] = useState<Set<string>>(new Set(['bg_default', 'skin_default']));
   const [activeBackground, setActiveBackground] = useState<string>('bg_default');
   const [activeClickerSkin, setActiveClickerSkin] = useState<string>('skin_default');
@@ -114,9 +114,20 @@ const AstralClicker: React.FC = () => {
   const [clickParticles, setClickParticles] = useState<Particle[]>([]);
   const [fallingCookiesCount, setFallingCookiesCount] = useState<number>(0);
 
-  const availableUpgrades = initialUpgrades.filter(
-    (upgrade) => !purchasedUpgrades.has(upgrade.id)
-  );
+  // Вычисляем текущие характеристики улучшений
+  const upgradesWithCurrentStats = initialUpgrades.map(upgradeDef => {
+    const level = purchasedUpgradeLevels.get(upgradeDef.id) || 0;
+    const currentCost = Math.floor(upgradeDef.baseCost * Math.pow(upgradeDef.costMultiplier, level));
+    const currentEffectValue = Math.floor(upgradeDef.baseEffectValue * Math.pow(upgradeDef.effectMultiplier, level));
+    return {
+      id: upgradeDef.id,
+      name: upgradeDef.name,
+      description: upgradeDef.description,
+      cost: currentCost,
+      effect: { type: upgradeDef.type, value: currentEffectValue },
+      level: level,
+    };
+  });
 
   const handleAstralClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAstralCount((prev) => prev + astralPerClick);
@@ -133,17 +144,31 @@ const AstralClicker: React.FC = () => {
     setClickParticles((prev) => prev.filter((p) => p.id !== id));
   };
 
-  const handlePurchaseUpgrade = (upgradeId: string, cost: number, effect: Upgrade['effect']) => {
-    if (astralCount >= cost) {
-      setAstralCount((prev) => prev - cost);
-      setPurchasedUpgrades((prev) => new Set(prev).add(upgradeId));
+  const handlePurchaseUpgrade = (upgradeId: string, cost: number, effect: { type: 'click' | 'passive', value: number }) => {
+    const upgradeDef = initialUpgrades.find(u => u.id === upgradeId);
+    if (!upgradeDef) return; // Should not happen
 
-      if (effect.type === 'click') {
-        setAstralPerClick((prev) => prev + effect.value);
-      } else if (effect.type === 'passive') {
-        setAstralPerSecond((prev) => prev + effect.value);
+    const currentLevel = purchasedUpgradeLevels.get(upgradeId) || 0;
+    const nextCost = Math.floor(upgradeDef.baseCost * Math.pow(upgradeDef.costMultiplier, currentLevel));
+
+    if (astralCount >= nextCost) {
+      setAstralCount((prev) => prev - nextCost);
+      setPurchasedUpgradeLevels((prev) => {
+        const newMap = new Map(prev);
+        newMap.set(upgradeId, currentLevel + 1);
+        return newMap;
+      });
+
+      // Обновляем эффект, вычитая старый и добавляя новый
+      const oldEffectValue = Math.floor(upgradeDef.baseEffectValue * Math.pow(upgradeDef.effectMultiplier, currentLevel));
+      const newEffectValue = Math.floor(upgradeDef.baseEffectValue * Math.pow(upgradeDef.effectMultiplier, currentLevel + 1));
+
+      if (upgradeDef.type === 'click') {
+        setAstralPerClick((prev) => prev - oldEffectValue + newEffectValue);
+      } else if (upgradeDef.type === 'passive') {
+        setAstralPerSecond((prev) => prev - oldEffectValue + newEffectValue);
       }
-      showSuccess(`Успешно куплено: ${initialUpgrades.find(u => u.id === upgradeId)?.name}!`);
+      showSuccess(`Успешно куплено: ${upgradeDef.name} (Ур. ${currentLevel + 1})!`);
     } else {
       showError('Недостаточно Астрала для покупки этого улучшения.');
     }
@@ -193,7 +218,7 @@ const AstralClicker: React.FC = () => {
       astralCount,
       astralPerClick,
       astralPerSecond,
-      purchasedUpgrades,
+      purchasedUpgradeLevels, // Передаем Map
       purchasedCosmetics,
     };
 
@@ -206,7 +231,7 @@ const AstralClicker: React.FC = () => {
         });
       }
     });
-  }, [astralCount, astralPerClick, astralPerSecond, purchasedUpgrades, purchasedCosmetics, unlockedAchievements]);
+  }, [astralCount, astralPerClick, astralPerSecond, purchasedUpgradeLevels, purchasedCosmetics, unlockedAchievements]);
 
 
   const currentBackgroundValue = initialCosmetics.find(c => c.id === activeBackground)?.value || 'none';
@@ -286,8 +311,8 @@ const AstralClicker: React.FC = () => {
           <TabsContent value="upgrades">
             <h2 className="text-3xl font-bold text-purple-400 mb-6 text-center lg:text-left">Улучшения</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-              {availableUpgrades.length > 0 ? (
-                availableUpgrades.map((upgrade) => (
+              {upgradesWithCurrentStats.length > 0 ? (
+                upgradesWithCurrentStats.map((upgrade) => (
                   <UpgradeItem
                     key={upgrade.id}
                     upgrade={upgrade}
