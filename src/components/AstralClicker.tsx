@@ -6,8 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UpgradeItem from './UpgradeItem';
 import CosmeticShop from './CosmeticShop';
-import ClickParticle from './ClickParticle'; // Импортируем новый компонент
-import FallingCookie from './FallingCookie'; // Импортируем новый компонент
+import ClickParticle from './ClickParticle';
+import FallingCookie from './FallingCookie';
+import AchievementsList from './AchievementsList'; // Импортируем новый компонент
 import { showSuccess, showError } from '@/utils/toast';
 
 interface Upgrade {
@@ -28,6 +29,19 @@ interface Cosmetic {
   cost: number;
   type: 'background' | 'clicker_skin';
   value: string;
+}
+
+interface Achievement {
+  id: string;
+  name: string;
+  description: string;
+  condition: (state: {
+    astralCount: number;
+    astralPerClick: number;
+    astralPerSecond: number;
+    purchasedUpgrades: Set<string>;
+    purchasedCosmetics: Set<string>;
+  }) => boolean;
 }
 
 const initialUpgrades: Upgrade[] = [
@@ -61,6 +75,25 @@ const initialCosmetics: Cosmetic[] = [
   { id: 'skin_cosmic_egg', name: 'Космическое Яйцо', description: 'В разработке', cost: Infinity, type: 'clicker_skin', value: 'https://i.postimg.cc/pr211111/cosmic_egg.jpg' },
 ];
 
+const allAchievements: Achievement[] = [
+  { id: 'astral_100', name: 'Начало Пути', description: 'Накопите 100 Астрала.', condition: (state) => state.astralCount >= 100 },
+  { id: 'astral_1000', name: 'Астральный Накопитель', description: 'Накопите 1,000 Астрала.', condition: (state) => state.astralCount >= 1000 },
+  { id: 'astral_10000', name: 'Мастер Астрала', description: 'Накопите 10,000 Астрала.', condition: (state) => state.astralCount >= 10000 },
+  { id: 'astral_per_second_10', name: 'Пассивный Доход', description: 'Достигните 10 Астрала в секунду.', condition: (state) => state.astralPerSecond >= 10 },
+  { id: 'astral_per_second_100', name: 'Астральный Поток', description: 'Достигните 100 Астрала в секунду.', condition: (state) => state.astralPerSecond >= 100 },
+  { id: 'upgrades_3', name: 'Первые Шаги', description: 'Купите 3 улучшения.', condition: (state) => state.purchasedUpgrades.size >= 3 },
+  { id: 'upgrades_10', name: 'Опытный Инвестор', description: 'Купите 10 улучшений.', condition: (state) => state.purchasedUpgrades.size >= 10 },
+  { id: 'cosmetic_1', name: 'Модник', description: 'Купите 1 косметический предмет (кроме стартовых).', condition: (state) => state.purchasedCosmetics.size > 2 }, // bg_default and skin_default are 2
+  { id: 'cosmetic_all_backgrounds', name: 'Коллекционер Фонов', description: 'Купите все фоны.', condition: (state) => {
+    const allBackgrounds = initialCosmetics.filter(c => c.type === 'background' && c.cost !== 0);
+    return allBackgrounds.every(bg => state.purchasedCosmetics.has(bg.id));
+  }},
+  { id: 'cosmetic_all_skins', name: 'Коллекционер Скинов', description: 'Купите все скины для кликера (кроме тех, что в разработке).', condition: (state) => {
+    const allSkins = initialCosmetics.filter(c => c.type === 'clicker_skin' && c.cost !== 0 && c.cost !== Infinity);
+    return allSkins.every(skin => state.purchasedCosmetics.has(skin.id));
+  }},
+];
+
 
 interface Particle {
   id: string;
@@ -76,6 +109,7 @@ const AstralClicker: React.FC = () => {
   const [purchasedCosmetics, setPurchasedCosmetics] = useState<Set<string>>(new Set(['bg_default', 'skin_default']));
   const [activeBackground, setActiveBackground] = useState<string>('bg_default');
   const [activeClickerSkin, setActiveClickerSkin] = useState<string>('skin_default');
+  const [unlockedAchievements, setUnlockedAchievements] = useState<Set<string>>(new Set());
 
   const [clickParticles, setClickParticles] = useState<Particle[]>([]);
   const [fallingCookiesCount, setFallingCookiesCount] = useState<number>(0);
@@ -153,12 +187,39 @@ const AstralClicker: React.FC = () => {
     setFallingCookiesCount(newFallingCount);
   }, [astralPerSecond]);
 
+  // Проверка достижений
+  useEffect(() => {
+    const currentState = {
+      astralCount,
+      astralPerClick,
+      astralPerSecond,
+      purchasedUpgrades,
+      purchasedCosmetics,
+    };
+
+    allAchievements.forEach(achievement => {
+      if (!unlockedAchievements.has(achievement.id) && achievement.condition(currentState)) {
+        setUnlockedAchievements(prev => {
+          const newSet = new Set(prev).add(achievement.id);
+          showSuccess(`Достижение разблокировано: "${achievement.name}"!`);
+          return newSet;
+        });
+      }
+    });
+  }, [astralCount, astralPerClick, astralPerSecond, purchasedUpgrades, purchasedCosmetics, unlockedAchievements]);
+
+
   const currentBackgroundValue = initialCosmetics.find(c => c.id === activeBackground)?.value || 'none';
   const currentClickerSkinValue = initialCosmetics.find(c => c.id === activeClickerSkin)?.value || 'https://i.postimg.cc/fRSJZP69/image.jpg';
 
+  const achievementsWithStatus = allAchievements.map(ach => ({
+    ...ach,
+    unlocked: unlockedAchievements.has(ach.id)
+  }));
+
   return (
     <div
-      className="min-h-screen flex flex-col lg:flex-row text-gray-100 p-4 transition-all duration-500 ease-in-out relative overflow-hidden" // Добавлены relative и overflow-hidden
+      className="min-h-screen flex flex-col lg:flex-row text-gray-100 p-4 transition-all duration-500 ease-in-out relative overflow-hidden"
       style={{
         backgroundImage: currentBackgroundValue !== 'none' ? `url(${currentBackgroundValue})` : 'none',
         backgroundSize: 'cover',
@@ -172,7 +233,7 @@ const AstralClicker: React.FC = () => {
           key={`falling-cookie-${index}`}
           id={`falling-cookie-${index}`}
           initialX={Math.random() * window.innerWidth}
-          speed={Math.random() * 2 + 1} // Случайная скорость от 1 до 3
+          speed={Math.random() * 2 + 1}
         />
       ))}
 
@@ -188,7 +249,7 @@ const AstralClicker: React.FC = () => {
       ))}
 
       {/* Левая секция: Кликер */}
-      <div className="flex-1 flex flex-col items-center justify-center p-4 lg:w-1/3 z-10"> {/* Добавлен z-10, чтобы контент был поверх частиц */}
+      <div className="flex-1 flex flex-col items-center justify-center p-4 lg:w-1/3 z-10">
         {/* Карточка счетчика Астрала */}
         <Card className="w-full max-w-md bg-gray-800/70 backdrop-blur-sm border-gray-700 shadow-lg rounded-lg p-6 mb-8 text-center">
           <CardTitle className="text-4xl font-bold text-purple-400 mb-2">Астрал: {Math.floor(astralCount)}</CardTitle>
@@ -214,12 +275,13 @@ const AstralClicker: React.FC = () => {
         </Button>
       </div>
 
-      {/* Правая секция: Улучшения и Косметика */}
-      <div className="flex-1 p-4 lg:w-2/3 lg:ml-8 z-10"> {/* Добавлен z-10 */}
+      {/* Правая секция: Улучшения, Косметика, Достижения */}
+      <div className="flex-1 p-4 lg:w-2/3 lg:ml-8 z-10">
         <Tabs defaultValue="upgrades" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6 bg-gray-800/70 backdrop-blur-sm border-gray-700">
+          <TabsList className="grid w-full grid-cols-3 mb-6 bg-gray-800/70 backdrop-blur-sm border-gray-700">
             <TabsTrigger value="upgrades" className="text-lg text-purple-300 data-[state=active]:bg-purple-600 data-[state=active]:text-white">Улучшения</TabsTrigger>
             <TabsTrigger value="cosmetics" className="text-lg text-blue-300 data-[state=active]:bg-blue-600 data-[state=active]:text-white">Магазин Косметики</TabsTrigger>
+            <TabsTrigger value="achievements" className="text-lg text-yellow-300 data-[state=active]:bg-yellow-600 data-[state=active]:text-white">Достижения</TabsTrigger>
           </TabsList>
           <TabsContent value="upgrades">
             <h2 className="text-3xl font-bold text-purple-400 mb-6 text-center lg:text-left">Улучшения</h2>
@@ -249,6 +311,9 @@ const AstralClicker: React.FC = () => {
               onPurchaseCosmetic={handlePurchaseCosmetic}
               onApplyCosmetic={handleApplyCosmetic}
             />
+          </TabsContent>
+          <TabsContent value="achievements">
+            <AchievementsList achievements={achievementsWithStatus} />
           </TabsContent>
         </Tabs>
       </div>
