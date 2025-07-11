@@ -19,8 +19,8 @@ const ClickParticle: React.FC<ClickParticleProps> = ({ id, startX, startY, onCom
     const colors = ['#FFD700', '#FFA500', '#FF4500', '#FF6347', '#FF1493', '#EE82EE', '#DA70D6', '#8A2BE2', '#4169E1', '#00BFFF', '#00CED1', '#00FA9A', '#7CFC00', '#ADFF2F', '#FFFF00'];
     setColor(colors[Math.floor(Math.random() * colors.length)]);
 
-    const animationDuration = 800; // ms
-    const fadeOutDelay = 200; // ms before fading starts
+    const animationDuration = 1200; // Увеличено с 800ms
+    const fadeOutDelay = 400; // Увеличено с 200ms
 
     const startTime = Date.now();
 
@@ -29,17 +29,17 @@ const ClickParticle: React.FC<ClickParticleProps> = ({ id, startX, startY, onCom
       const progress = elapsed / animationDuration;
 
       if (progress < 1) {
-        // Move upwards and slightly outwards
-        const newY = startY - (progress * 100); // Move up 100px
-        const newX = startX + (Math.sin(progress * Math.PI * 2) * 20); // Slight horizontal wiggle
+        // Движение вверх и немного в стороны
+        const newY = startY - (progress * 100); // Движение вверх на 100px
+        const newX = startX + (Math.sin(progress * Math.PI * 2) * 20); // Небольшое горизонтальное колебание
 
-        // Fade out
+        // Исчезновение
         let newOpacity = 1;
         if (elapsed > fadeOutDelay) {
           newOpacity = 1 - ((elapsed - fadeOutDelay) / (animationDuration - fadeOutDelay));
         }
 
-        // Scale up slightly
+        // Небольшое увеличение размера
         const newScale = 1 + (progress * 0.5);
 
         setPosition({ x: newX, y: newY });

@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UpgradeItem from './UpgradeItem';
 import CosmeticShop from './CosmeticShop';
 import ClickParticle from './ClickParticle';
-import FallingCookie from './FallingCookie';
+// FallingCookie теперь управляется FallingAstralBackground
 import AchievementsList from './AchievementsList';
 import { showSuccess, showError } from '@/utils/toast';
 import { initialUpgrades, initialCosmetics, allAchievements, UpgradeDefinition, Cosmetic, Achievement } from '@/lib/gameData';
@@ -30,9 +30,10 @@ const AstralClicker: React.FC = () => {
   const [unlockedAchievements, setUnlockedAchievements] = useState<Set<string>>(new Set());
 
   const [clickParticles, setClickParticles] = useState<Particle[]>([]);
-  const [fallingCookiesCount, setFallingCookiesCount] = useState<number>(0);
+  // fallingCookiesCount state больше не нужен здесь, так как FallingAstralBackground управляет своими частицами
+  // const [fallingCookiesCount, setFallingCookiesCount] = useState<number>(0); // Удалена эта строка
 
-  const clickerButtonRef = useRef<HTMLButtonElement>(null); // Добавляем реф для кнопки
+  const astralClickerRef = useRef<HTMLDivElement>(null); // Реф для основного контейнера AstralClicker
 
   // Вычисляем текущие характеристики улучшений
   const upgradesWithCurrentStats = initialUpgrades.map(upgradeDef => {
@@ -53,10 +54,11 @@ const AstralClicker: React.FC = () => {
     setAstralCount((prev) => prev + astralPerClick);
 
     // Добавляем частицы клика
-    if (clickerButtonRef.current) {
-      const rect = clickerButtonRef.current.getBoundingClientRect();
-      const clickX = event.clientX - rect.left;
-      const clickY = event.clientY - rect.top;
+    if (astralClickerRef.current) {
+      const containerRect = astralClickerRef.current.getBoundingClientRect();
+      // Координаты клика относительно контейнера AstralClicker
+      const clickX = event.clientX - containerRect.left;
+      const clickY = event.clientY - containerRect.top;
 
       const newParticleId = `particle-${Date.now()}-${Math.random()}`;
       setClickParticles((prev) => [
@@ -74,7 +76,7 @@ const AstralClicker: React.FC = () => {
     const upgradeDef = initialUpgrades.find(u => u.id === upgradeId);
     if (!upgradeDef) return;
 
-    const currentLevel = purchasedUpgradeLevels.get(upgradeId) || 0;
+    const currentLevel = purchasedUpgradeLevels.get(upgradeDef.id) || 0;
     const nextCost = Math.floor(upgradeDef.baseCost * Math.pow(upgradeDef.costMultiplier, currentLevel));
 
     if (astralCount >= nextCost) {
@@ -142,12 +144,13 @@ const AstralClicker: React.FC = () => {
     return () => clearInterval(interval);
   }, [astralPerSecond]);
 
-  // Обновляем количество падающих "печенек" в зависимости от astralPerSecond
-  useEffect(() => {
-    const maxFallingCookies = 100;
-    const newFallingCount = Math.min(astralPerSecond, maxFallingCookies);
-    setFallingCookiesCount(newFallingCount);
-  }, [astralPerSecond]);
+  // Обновление количества падающих "печенек" в зависимости от astralPerSecond
+  // Этот эффект больше не нужен здесь, так как FallingAstralBackground управляет своими частицами
+  // useEffect(() => {
+  //   const maxFallingCookies = 100;
+  //   const newFallingCount = Math.min(astralPerSecond, maxFallingCookies);
+  //   setFallingCookiesCount(newFallingCount);
+  // }, [astralPerSecond]); // Удален этот эффект
 
   // Проверка достижений
   useEffect(() => {
@@ -181,6 +184,7 @@ const AstralClicker: React.FC = () => {
 
   return (
     <div
+      ref={astralClickerRef} {/* Применяем реф к основному контейнеру */}
       className="min-h-screen flex flex-col lg:flex-row text-gray-100 p-4 transition-all duration-500 ease-in-out relative"
       style={{
         backgroundImage: currentBackgroundValue !== 'none' ? `url(${currentBackgroundValue})` : 'none',
@@ -189,15 +193,15 @@ const AstralClicker: React.FC = () => {
         backgroundColor: currentBackgroundValue === 'none' ? 'black' : 'transparent',
       }}
     >
-      {/* Падающие "печеньки" */}
-      {Array.from({ length: fallingCookiesCount }).map((_, index) => (
+      {/* Падающие "печеньки" - УДАЛЕНЫ ОТСЮДА, теперь в FallingAstralBackground */}
+      {/* {Array.from({ length: fallingCookiesCount }).map((_, index) => (
         <FallingCookie
           key={`falling-cookie-${index}`}
           id={`falling-cookie-${index}`}
           initialX={Math.random() * window.innerWidth}
           speed={Math.random() * 2 + 1}
         />
-      ))}
+      ))} */}
 
       {/* Частицы клика */}
       {clickParticles.map((particle) => (
@@ -222,7 +226,6 @@ const AstralClicker: React.FC = () => {
 
         {/* Кнопка клика */}
         <Button
-          ref={clickerButtonRef} // Применяем реф к кнопке
           onClick={handleAstralClick}
           className="relative w-64 h-64 lg:w-80 lg:h-80 bg-transparent hover:scale-105 transition-transform transform active:scale-95 shadow-2xl flex items-center justify-center overflow-hidden group"
           style={{

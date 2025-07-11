@@ -3,6 +3,9 @@
 @tailwind utilities;
 
 @layer base {
+  html, body {
+    height: 100%; /* Добавлено для обеспечения полной высоты */
+  }
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
