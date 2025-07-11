@@ -25,14 +25,14 @@ const UpgradeItem: React.FC<UpgradeItemProps> = ({ upgrade, currentMilk, onPurch
   const canAfford = currentMilk >= upgrade.cost;
 
   return (
-    <Card className="w-full max-w-sm bg-white/50 backdrop-blur-sm border-gray-200 dark:bg-gray-800/50 dark:border-gray-700">
+    <Card className="w-full max-w-sm bg-gray-700/70 backdrop-blur-sm border-gray-600 shadow-md rounded-lg">
       <CardHeader>
-        <CardTitle className="text-lg">{upgrade.name}</CardTitle>
-        <CardDescription className="text-sm text-gray-600 dark:text-gray-400">{upgrade.description}</CardDescription>
+        <CardTitle className="text-lg text-yellow-200">{upgrade.name}</CardTitle>
+        <CardDescription className="text-sm text-gray-300">{upgrade.description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <p className="text-md font-semibold mb-2">Стоимость: {upgrade.cost} молока</p>
-        <p className="text-sm">
+        <p className="text-md font-semibold mb-2 text-green-400">Стоимость: {upgrade.cost} молока</p>
+        <p className="text-sm text-gray-200">
           Эффект: {upgrade.effect.type === 'click' ? `+${upgrade.effect.value} молока за клик` : `+${upgrade.effect.value} молока в секунду`}
         </p>
       </CardContent>
@@ -40,7 +40,7 @@ const UpgradeItem: React.FC<UpgradeItemProps> = ({ upgrade, currentMilk, onPurch
         <Button
           onClick={() => onPurchase(upgrade.id, upgrade.cost, upgrade.effect)}
           disabled={!canAfford}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-300 disabled:text-gray-500 dark:disabled:bg-gray-700 dark:disabled:text-gray-400"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-500 disabled:text-gray-300"
         >
           {canAfford ? 'Купить' : 'Недостаточно молока'}
         </Button>
