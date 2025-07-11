@@ -1,7 +1,7 @@
 "use client";
 
 import { MadeWithDyad } from "@/components/made-with-dyad";
-import AstralClicker from "@/components/MilkClicker"; // Импортируем AstralClicker (переименован из MilkClicker)
+import AstralClicker from "@/components/AstralClicker"; // Импортируем AstralClicker
 
 const Index = () => {
   return (
