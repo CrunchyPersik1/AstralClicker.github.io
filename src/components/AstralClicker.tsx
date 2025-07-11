@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UpgradeItem from './UpgradeItem';
 import CosmeticShop from './CosmeticShop';
 import ClickParticle from './ClickParticle';
-// FallingCookie теперь управляется FallingAstralBackground
+// FallingCookie теперь управляется FallingAstralBackground, поэтому импорт удален
 import AchievementsList from './AchievementsList';
 import { showSuccess, showError } from '@/utils/toast';
 import { initialUpgrades, initialCosmetics, allAchievements, UpgradeDefinition, Cosmetic, Achievement } from '@/lib/gameData';
@@ -36,10 +36,10 @@ const AstralClicker: React.FC = () => {
   const astralClickerRef = useRef<HTMLDivElement>(null); // Реф для основного контейнера AstralClicker
 
   // Вычисляем текущие характеристики улучшений
-  const upgradesWithCurrentStats = initialUpgrades.map(upgradeDef => {
+  const upgradesWithCurrentStats = initialUpgrades.map((upgradeDef) => {
     const level = purchasedUpgradeLevels.get(upgradeDef.id) || 0;
     const currentCost = Math.floor(upgradeDef.baseCost * Math.pow(upgradeDef.costMultiplier, level));
-    const currentEffectValue = upgradeDef.baseEffectValue * level; 
+    const currentEffectValue = upgradeDef.baseEffectValue * level;
     return {
       id: upgradeDef.id,
       name: upgradeDef.name,
