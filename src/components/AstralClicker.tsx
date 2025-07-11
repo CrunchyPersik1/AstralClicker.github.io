@@ -9,7 +9,7 @@ import CosmeticShop from './CosmeticShop';
 import ClickParticle from './ClickParticle';
 import AchievementsList from './AchievementsList';
 import { showSuccess, showError } from '@/utils/toast';
-import { initialUpgrades, initialCosmetics, allAchievements, UpgradeDefinition, Cosmetic, Achievement } from '@/lib/gameData';
+import { initialUpgrades, initialCosmetics, UpgradeDefinition, Cosmetic, Achievement } from '@/lib/gameData';
 
 
 interface Particle {
@@ -18,34 +18,59 @@ interface Particle {
   y: number;
 }
 
-const AstralClicker: React.FC = () => {
-  const [astralCount, setAstralCount] = useState<number>(0);
-  const [astralPerClick, setAstralPerClick] = useState<number>(1);
-  const [astralPerSecond, setAstralPerSecond] = useState<number>(0);
-  const [purchasedUpgradeLevels, setPurchasedUpgradeLevels] = useState<Map<string, number>>(new Map());
-  const [purchasedCosmetics, setPurchasedCosmetics] = useState<Set<string>>(new Set(['bg_default', 'skin_default']));
-  const [activeBackground, setActiveBackground] = useState<string>('bg_default');
-  const [activeClickerSkin, setActiveClickerSkin] = useState<string>('skin_default');
-  const [unlockedAchievements, setUnlockedAchievements] = useState<Set<string>>(new Set());
+interface AchievementWithStatus extends Achievement {
+  unlocked: boolean;
+}
 
+interface AstralClickerProps {
+  astralCount: number;
+  setAstralCount: React.Dispatch<React.SetStateAction<number>>;
+  astralPerClick: number;
+  astralPerSecond: number;
+  purchasedUpgradeLevels: Map<string, number>;
+  setPurchasedUpgradeLevels: React.Dispatch<React.SetStateAction<Map<string, number>>>;
+  purchasedCosmetics: Set<string>;
+  setPurchasedCosmetics: React.Dispatch<React.SetStateAction<Set<string>>>;
+  activeBackground: string;
+  setActiveBackground: React.Dispatch<React.SetStateAction<string>>;
+  activeClickerSkin: string;
+  setActiveClickerSkin: React.Dispatch<React.SetStateAction<string>>;
+  unlockedAchievements: Set<string>;
+  setUnlockedAchievements: React.Dispatch<React.SetStateAction<Set<string>>>;
+  upgradesWithCurrentStats: {
+    id: string;
+    name: string;
+    description: string;
+    cost: number;
+    effect: { type: 'click' | 'passive'; value: number };
+    level: number;
+  }[];
+  currentClickerSkinValue: string;
+  achievementsWithStatus: AchievementWithStatus[]; // Добавлен новый пропс
+}
+
+const AstralClicker: React.FC<AstralClickerProps> = ({
+  astralCount,
+  setAstralCount,
+  astralPerClick,
+  astralPerSecond,
+  purchasedUpgradeLevels,
+  setPurchasedUpgradeLevels,
+  purchasedCosmetics,
+  setPurchasedCosmetics,
+  activeBackground,
+  setActiveBackground,
+  activeClickerSkin,
+  setActiveClickerSkin,
+  unlockedAchievements,
+  setUnlockedAchievements,
+  upgradesWithCurrentStats,
+  currentClickerSkinValue,
+  achievementsWithStatus, // Принимаем из пропсов
+}) => {
   const [clickParticles, setClickParticles] = useState<Particle[]>([]);
 
   const astralClickerRef = useRef<HTMLDivElement>(null);
-
-  // Вычисляем текущие характеристики улучшений
-  const upgradesWithCurrentStats = initialUpgrades.map((upgradeDef) => {
-    const level = purchasedUpgradeLevels.get(upgradeDef.id) || 0;
-    const currentCost = Math.floor(upgradeDef.baseCost * Math.pow(upgradeDef.costMultiplier, level));
-    const currentEffectValue = upgradeDef.baseEffectValue * level;
-    return {
-      id: upgradeDef.id,
-      name: upgradeDef.name,
-      description: upgradeDef.description,
-      cost: currentCost,
-      effect: { type: upgradeDef.type, value: currentEffectValue },
-      level: level,
-    };
-  });
 
   const handleAstralClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAstralCount((prev) => prev + astralPerClick);
@@ -107,74 +132,77 @@ const AstralClicker: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    let totalClickEffect = 0;
-    let totalPassiveEffect = 0;
+  // Эффект для пересчета общего Астрала за клик и Астрала в секунду
+  // Этот эффект теперь находится в Index.tsx
+  // useEffect(() => {
+  //   let totalClickEffect = 0;
+  //   let totalPassiveEffect = 0;
 
-    initialUpgrades.forEach(upgradeDef => {
-      const level = purchasedUpgradeLevels.get(upgradeDef.id) || 0;
-      if (level > 0) {
-        const effectValue = upgradeDef.baseEffectValue * level; 
-        if (upgradeDef.type === 'click') {
-          totalClickEffect += effectValue;
-        } else if (upgradeDef.type === 'passive') {
-          totalPassiveEffect += effectValue;
-        }
-      }
-    });
+  //   initialUpgrades.forEach(upgradeDef => {
+  //     const level = purchasedUpgradeLevels.get(upgradeDef.id) || 0;
+  //     if (level > 0) {
+  //       const effectValue = upgradeDef.baseEffectValue * level; 
+  //       if (upgradeDef.type === 'click') {
+  //         totalClickEffect += effectValue;
+  //       } else if (upgradeDef.type === 'passive') {
+  //         totalPassiveEffect += effectValue;
+  //       }
+  //     }
+  //   });
 
-    setAstralPerClick(1 + totalClickEffect);
-    setAstralPerSecond(totalPassiveEffect);
-  }, [purchasedUpgradeLevels]);
+  //   setAstralPerClick(1 + totalClickEffect); // Базовый клик всегда 1
+  //   setAstralPerSecond(totalPassiveEffect);
+  // }, [purchasedUpgradeLevels]);
 
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (astralPerSecond > 0) {
-      interval = setInterval(() => {
-        setAstralCount((prev) => prev + astralPerSecond);
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [astralPerSecond]);
+  // Пассивная генерация астрала
+  // Этот эффект теперь находится в Index.tsx
+  // useEffect(() => {
+  //   let interval: NodeJS.Timeout;
+  //   if (astralPerSecond > 0) {
+  //     interval = setInterval(() => {
+  //       setAstralCount((prev) => prev + astralPerSecond);
+  //     }, 1000);
+  //   }
+  //   return () => clearInterval(interval);
+  // }, [astralPerSecond]);
 
-  useEffect(() => {
-    const currentState = {
-      astralCount,
-      astralPerClick,
-      astralPerSecond,
-      purchasedUpgradeLevels,
-      purchasedCosmetics,
-    };
+  // Проверка достижений
+  // Этот эффект теперь находится в Index.tsx
+  // useEffect(() => {
+  //   const currentState = {
+  //     astralCount,
+  //     astralPerClick,
+  //     astralPerSecond,
+  //     purchasedUpgradeLevels,
+  //     purchasedCosmetics,
+  //   };
 
-    allAchievements.forEach(achievement => {
-      if (!unlockedAchievements.has(achievement.id) && achievement.condition(currentState)) {
-        setUnlockedAchievements(prev => {
-          const newSet = new Set(prev).add(achievement.id);
-          showSuccess(`Достижение разблокировано: "${achievement.name}"!`);
-          return newSet;
-        });
-      }
-    });
-  }, [astralCount, astralPerClick, astralPerSecond, purchasedUpgradeLevels, purchasedCosmetics, unlockedAchievements]);
+  //   allAchievements.forEach(achievement => {
+  //     if (!unlockedAchievements.has(achievement.id) && achievement.condition(currentState)) {
+  //       setUnlockedAchievements(prev => {
+  //         const newSet = new Set(prev).add(achievement.id);
+  //         showSuccess(`Достижение разблокировано: "${achievement.name}"!`);
+  //         return newSet;
+  //       });
+  //     }
+  //   });
+  // }, [astralCount, astralPerClick, astralPerSecond, purchasedUpgradeLevels, purchasedCosmetics, unlockedAchievements]);
 
-
-  const currentBackgroundValue = initialCosmetics.find(c => c.id === activeBackground)?.value || 'none';
-  const currentClickerSkinValue = initialCosmetics.find(c => c.id === activeClickerSkin)?.value || 'https://i.postimg.cc/fRSJZP69/image.jpg';
-
-  const achievementsWithStatus = allAchievements.map(ach => ({
-    ...ach,
-    unlocked: unlockedAchievements.has(ach.id)
-  }));
+  // achievementsWithStatus теперь приходит через пропсы
+  // const achievementsWithStatus = allAchievements.map(ach => ({
+  //   ...ach,
+  //   unlocked: unlockedAchievements.has(ach.id)
+  // }));
 
   return (
     <div
       ref={astralClickerRef}
-      className="min-h-screen flex flex-col lg:flex-row text-gray-100 p-4 transition-all duration-500 ease-in-out relative"
+      className="min-h-screen flex flex-col lg:flex-row text-gray-100 p-4 transition-all duration-500 ease-in-out relative z-10"
       style={{
-        backgroundImage: currentBackgroundValue !== 'none' ? `url(${currentBackgroundValue})` : 'none',
+        backgroundImage: activeBackground !== 'none' ? `url(${initialCosmetics.find(c => c.id === activeBackground)?.value || 'none'})` : 'none',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        backgroundColor: currentBackgroundValue === 'none' ? 'black' : 'transparent',
+        backgroundColor: activeBackground === 'none' ? 'black' : 'transparent',
       }}
     >
       {clickParticles.map((particle) => (
@@ -184,10 +212,11 @@ const AstralClicker: React.FC = () => {
           startX={particle.x}
           startY={particle.y}
           onComplete={handleParticleAnimationEnd}
+          imageSrc={currentClickerSkinValue}
         />
       ))}
 
-      <div className="flex-1 flex flex-col items-center justify-center p-4 lg:w-1/3 z-10">
+      <div className="flex-1 flex flex-col items-center justify-center p-4 lg:w-1/3">
         <Card className="w-full max-w-md bg-gray-800/70 backdrop-blur-sm border-gray-700 shadow-lg rounded-lg p-6 mb-8 text-center">
           <CardTitle className="text-4xl font-bold text-purple-400 mb-2">Астрал: {Math.floor(astralCount)}</CardTitle>
           <p className="text-lg text-gray-300">
@@ -211,7 +240,7 @@ const AstralClicker: React.FC = () => {
         </Button>
       </div>
 
-      <div className="flex-1 p-4 lg:w-2/3 lg:ml-8 z-10">
+      <div className="flex-1 p-4 lg:w-2/3 lg:ml-8">
         <Tabs defaultValue="upgrades" className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-6 bg-gray-800/70 backdrop-blur-sm border-gray-700">
             <TabsTrigger value="upgrades" className="text-lg text-purple-300 data-[state=active]:bg-purple-600 data-[state=active]:text-white">Улучшения</TabsTrigger>

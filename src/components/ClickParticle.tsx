@@ -7,20 +7,19 @@ interface ClickParticleProps {
   startX: number;
   startY: number;
   onComplete: (id: string) => void;
+  imageSrc: string; // Новый пропс для пути к изображению
 }
 
-const ClickParticle: React.FC<ClickParticleProps> = ({ id, startX, startY, onComplete }) => {
+const ClickParticle: React.FC<ClickParticleProps> = ({ id, startX, startY, onComplete, imageSrc }) => {
   const [position, setPosition] = useState({ x: startX, y: startY });
   const [opacity, setOpacity] = useState(1);
-  const [scale, setScale] = useState(1);
-  const [color, setColor] = useState('');
+  const [scale, setScale] = useState(0.5); // Начальный размер, чтобы выглядело как "маленькая копия"
+  const [rotation, setRotation] = useState(0);
 
   useEffect(() => {
-    const colors = ['#FFD700', '#FFA500', '#FF4500', '#FF6347', '#FF1493', '#EE82EE', '#DA70D6', '#8A2BE2', '#4169E1', '#00BFFF', '#00CED1', '#00FA9A', '#7CFC00', '#ADFF2F', '#FFFF00'];
-    setColor(colors[Math.floor(Math.random() * colors.length)]);
-
-    const animationDuration = 1200; // Увеличено с 800ms
-    const fadeOutDelay = 400; // Увеличено с 200ms
+    const animationDuration = 1200;
+    const fadeOutDelay = 400;
+    const rotationSpeed = (Math.random() - 0.5) * 360; // Случайная скорость вращения
 
     const startTime = Date.now();
 
@@ -29,22 +28,21 @@ const ClickParticle: React.FC<ClickParticleProps> = ({ id, startX, startY, onCom
       const progress = elapsed / animationDuration;
 
       if (progress < 1) {
-        // Движение вверх и немного в стороны
-        const newY = startY - (progress * 100); // Движение вверх на 100px
-        const newX = startX + (Math.sin(progress * Math.PI * 2) * 20); // Небольшое горизонтальное колебание
-
-        // Исчезновение
+        const newY = startY - (progress * 100);
+        const newX = startX + (Math.sin(progress * Math.PI * 2) * 20);
+        
         let newOpacity = 1;
         if (elapsed > fadeOutDelay) {
           newOpacity = 1 - ((elapsed - fadeOutDelay) / (animationDuration - fadeOutDelay));
         }
 
-        // Небольшое увеличение размера
-        const newScale = 1 + (progress * 0.5);
+        const newScale = 0.5 + (progress * 0.5); // Увеличение от 0.5 до 1
+        const newRotation = rotationSpeed * progress;
 
         setPosition({ x: newX, y: newY });
         setOpacity(newOpacity);
         setScale(newScale);
+        setRotation(newRotation);
         requestAnimationFrame(animate);
       } else {
         onComplete(id);
@@ -52,23 +50,23 @@ const ClickParticle: React.FC<ClickParticleProps> = ({ id, startX, startY, onCom
     };
 
     requestAnimationFrame(animate);
-  }, [id, startX, startY, onComplete]);
+  }, [id, startX, startY, onComplete, imageSrc]);
 
   return (
-    <div
-      className="absolute pointer-events-none text-xl font-bold select-none"
+    <img
+      src={imageSrc}
+      alt="Astral Particle"
+      className="absolute pointer-events-none"
       style={{
         left: position.x,
         top: position.y,
         opacity: opacity,
-        transform: `translate(-50%, -50%) scale(${scale})`,
-        color: color,
-        textShadow: '0 0 5px rgba(255,255,255,0.7)',
+        transform: `translate(-50%, -50%) scale(${scale}) rotate(${rotation}deg)`,
+        width: '40px', // Размер частицы
+        height: '40px',
         zIndex: 9999,
       }}
-    >
-      +{Math.floor(Math.random() * 5) + 1}
-    </div>
+    />
   );
 };
 

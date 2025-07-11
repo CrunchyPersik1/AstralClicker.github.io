@@ -6,28 +6,26 @@ interface FallingCookieProps {
   id: string;
   initialX: number;
   speed: number;
+  imageSrc: string; // Новый пропс для пути к изображению
 }
 
-const FallingCookie: React.FC<FallingCookieProps> = ({ id, initialX, speed }) => {
-  const [yPos, setYPos] = useState(-50); // Start above the screen
+const FallingCookie: React.FC<FallingCookieProps> = ({ id, initialX, speed, imageSrc }) => {
+  const [yPos, setYPos] = useState(-50);
   const [xPos, setXPos] = useState(initialX);
   const [rotation, setRotation] = useState(0);
 
-  const imageSrc = 'https://i.postimg.cc/fRSJZP69/image.jpg'; // Используем тот же скин астрала
-
   useEffect(() => {
     let animationFrameId: number;
-    let currentY = -50; // Use a local variable for current position
+    let currentY = -50;
     let currentX = initialX;
     let currentRotation = 0;
-    const rotationSpeed = (Math.random() - 0.5) * 10; // Random rotation speed for each particle
+    const rotationSpeed = (Math.random() - 0.5) * 10;
 
     const animate = () => {
       currentY += speed;
       currentRotation += rotationSpeed;
 
       if (currentY > window.innerHeight + 50) {
-        // Reset position to top for continuous falling
         currentY = -50;
         currentX = Math.random() * window.innerWidth;
         currentRotation = 0;
@@ -42,11 +40,10 @@ const FallingCookie: React.FC<FallingCookieProps> = ({ id, initialX, speed }) =>
 
     animationFrameId = requestAnimationFrame(animate);
 
-    // Cleanup function to cancel the animation frame when the component unmounts
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [id, initialX, speed]); // Dependencies should only be props that define the particle's initial behavior
+  }, [id, initialX, speed]);
 
   return (
     <img
@@ -58,8 +55,8 @@ const FallingCookie: React.FC<FallingCookieProps> = ({ id, initialX, speed }) =>
         top: yPos,
         width: '30px',
         height: '30px',
-        transform: `translate(-50%, -50%) rotate(${rotation}deg)`, // Center the image and apply rotation
-        zIndex: 0, // Behind other elements
+        transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
+        zIndex: 0,
       }}
     />
   );

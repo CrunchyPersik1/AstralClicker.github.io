@@ -3,19 +3,38 @@
 import React, { useState, useEffect } from 'react';
 import FallingCookie from './FallingCookie';
 
-const FallingAstralBackground: React.FC = () => {
+interface FallingAstralBackgroundProps {
+  astralPerSecond: number;
+  clickerSkinSrc: string;
+}
+
+const FallingAstralBackground: React.FC<FallingAstralBackgroundProps> = ({ astralPerSecond, clickerSkinSrc }) => {
   const [fallingCookies, setFallingCookies] = useState<Array<{ id: string; initialX: number; speed: number }>>([]);
-  const maxFallingCookies = 50; // Количество падающих частиц для фонового эффекта
+  const maxFallingCookiesCap = 100; // Максимальное количество падающих частиц
 
   useEffect(() => {
-    // Инициализация фиксированного количества падающих частиц
-    const initialCookies = Array.from({ length: maxFallingCookies }).map((_, index) => ({
-      id: `bg-cookie-${index}-${Date.now()}`,
-      initialX: Math.random() * window.innerWidth,
-      speed: Math.random() * 1 + 0.5, // Более медленное и тонкое падение
-    }));
-    setFallingCookies(initialCookies);
-  }, []);
+    const targetFallingCookies = Math.min(astralPerSecond, maxFallingCookiesCap);
+    
+    setFallingCookies(prevCookies => {
+      const newCookies = [...prevCookies];
+      
+      // Добавляем новые частицы, если нужно
+      while (newCookies.length < targetFallingCookies) {
+        newCookies.push({
+          id: `bg-cookie-${Date.now()}-${Math.random()}`,
+          initialX: Math.random() * window.innerWidth,
+          speed: Math.random() * 1 + 0.5,
+        });
+      }
+
+      // Удаляем лишние частицы, если нужно
+      while (newCookies.length > targetFallingCookies) {
+        newCookies.pop(); // Удаляем последние, чтобы избежать проблем с ключами
+      }
+
+      return newCookies;
+    });
+  }, [astralPerSecond]); // Зависимость от astralPerSecond
 
   return (
     <div className="fixed inset-0 w-screen h-screen pointer-events-none overflow-hidden z-0">
@@ -25,6 +44,7 @@ const FallingAstralBackground: React.FC = () => {
           id={cookie.id}
           initialX={cookie.initialX}
           speed={cookie.speed}
+          imageSrc={clickerSkinSrc} // Передаем скин кликера
         />
       ))}
     </div>
