@@ -6,30 +6,44 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import React, { useState, useEffect } from "react";
-import LoadingSpinner from "./components/LoadingSpinner"; // Импортируем новый компонент
+import LoadingSpinner from "./components/LoadingSpinner";
 
 const queryClient = new QueryClient();
 
 const App = () => {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingContent, setIsLoadingContent] = useState(true); // Контролирует готовность основного контента
+  const [showSpinnerComponent, setShowSpinnerComponent] = useState(true); // Контролирует монтирование/размонтирование компонента спиннера
+  const [isSpinnerFadingOut, setIsSpinnerFadingOut] = useState(false); // Сигнализирует спиннеру о начале исчезновения
 
   useEffect(() => {
-    // Симулируем время загрузки
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 2500); // Анимация загрузки будет видна 2.5 секунды
+    // Симулируем время загрузки контента
+    const contentLoadTimer = setTimeout(() => {
+      setIsLoadingContent(false); // Контент готов
+      setIsSpinnerFadingOut(true); // Сообщаем спиннеру, что пора начинать исчезать
+    }, 2500); // Контент будет готов через 2.5 секунды
 
-    return () => clearTimeout(timer);
+    return () => clearTimeout(contentLoadTimer);
   }, []);
+
+  useEffect(() => {
+    if (isSpinnerFadingOut) {
+      // После того как спиннер начал исчезать, ждем завершения анимации, затем размонтируем его
+      const spinnerFadeOutDuration = 500; // Должно совпадать с длительностью CSS-перехода
+      const unmountSpinnerTimer = setTimeout(() => {
+        setShowSpinnerComponent(false);
+      }, spinnerFadeOutDuration);
+
+      return () => clearTimeout(unmountSpinnerTimer);
+    }
+  }, [isSpinnerFadingOut]);
 
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        {isLoading ? (
-          <LoadingSpinner />
-        ) : (
+        {showSpinnerComponent && <LoadingSpinner isFadingOut={isSpinnerFadingOut} />}
+        {!showSpinnerComponent && ( // Рендерим основной контент только после размонтирования компонента спиннера
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
