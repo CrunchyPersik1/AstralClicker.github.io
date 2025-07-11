@@ -105,7 +105,7 @@ const AstralClicker: React.FC = () => {
   const [astralCount, setAstralCount] = useState<number>(0);
   const [astralPerClick, setAstralPerClick] = useState<number>(1);
   const [astralPerSecond, setAstralPerSecond] = useState<number>(0);
-  const [purchasedUpgradeLevels, setPurchasedUpgradeLevels] = useState<Map<string, number>>(new Map()); // Изменено на Map
+  const [purchasedUpgradeLevels, setPurchasedUpgradeLevels] = useState<Map<string, number>>(new Map());
   const [purchasedCosmetics, setPurchasedCosmetics] = useState<Set<string>>(new Set(['bg_default', 'skin_default']));
   const [activeBackground, setActiveBackground] = useState<string>('bg_default');
   const [activeClickerSkin, setActiveClickerSkin] = useState<string>('skin_default');
@@ -144,9 +144,9 @@ const AstralClicker: React.FC = () => {
     setClickParticles((prev) => prev.filter((p) => p.id !== id));
   };
 
-  const handlePurchaseUpgrade = (upgradeId: string, cost: number, effect: { type: 'click' | 'passive', value: number }) => {
+  const handlePurchaseUpgrade = (upgradeId: string, cost: number) => { // Убрал 'effect' из параметров, так как он будет пересчитываться
     const upgradeDef = initialUpgrades.find(u => u.id === upgradeId);
-    if (!upgradeDef) return; // Should not happen
+    if (!upgradeDef) return;
 
     const currentLevel = purchasedUpgradeLevels.get(upgradeId) || 0;
     const nextCost = Math.floor(upgradeDef.baseCost * Math.pow(upgradeDef.costMultiplier, currentLevel));
@@ -158,16 +158,6 @@ const AstralClicker: React.FC = () => {
         newMap.set(upgradeId, currentLevel + 1);
         return newMap;
       });
-
-      // Обновляем эффект, вычитая старый и добавляя новый
-      const oldEffectValue = Math.floor(upgradeDef.baseEffectValue * Math.pow(upgradeDef.effectMultiplier, currentLevel));
-      const newEffectValue = Math.floor(upgradeDef.baseEffectValue * Math.pow(upgradeDef.effectMultiplier, currentLevel + 1));
-
-      if (upgradeDef.type === 'click') {
-        setAstralPerClick((prev) => prev - oldEffectValue + newEffectValue);
-      } else if (upgradeDef.type === 'passive') {
-        setAstralPerSecond((prev) => prev - oldEffectValue + newEffectValue);
-      }
       showSuccess(`Успешно куплено: ${upgradeDef.name} (Ур. ${currentLevel + 1})!`);
     } else {
       showError('Недостаточно Астрала для покупки этого улучшения.');
@@ -193,6 +183,27 @@ const AstralClicker: React.FC = () => {
       showSuccess(`Скин кликера "${cosmetic.name}" применен!`);
     }
   };
+
+  // Эффект для пересчета astralPerClick и astralPerSecond при изменении уровней улучшений
+  useEffect(() => {
+    let totalClickEffect = 1; // Базовое значение
+    let totalPassiveEffect = 0; // Базовое значение
+
+    initialUpgrades.forEach(upgradeDef => {
+      const level = purchasedUpgradeLevels.get(upgradeDef.id) || 0;
+      if (level > 0) {
+        const effectValue = Math.floor(upgradeDef.baseEffectValue * Math.pow(upgradeDef.effectMultiplier, level));
+        if (upgradeDef.type === 'click') {
+          totalClickEffect += effectValue;
+        } else if (upgradeDef.type === 'passive') {
+          totalPassiveEffect += effectValue;
+        }
+      }
+    });
+
+    setAstralPerClick(totalClickEffect);
+    setAstralPerSecond(totalPassiveEffect);
+  }, [purchasedUpgradeLevels]); // Зависимость от карты уровней улучшений
 
   // Пассивная генерация астрала
   useEffect(() => {
