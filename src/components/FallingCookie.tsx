@@ -12,36 +12,41 @@ const FallingCookie: React.FC<FallingCookieProps> = ({ id, initialX, speed }) =>
   const [yPos, setYPos] = useState(-50); // Start above the screen
   const [xPos, setXPos] = useState(initialX);
   const [rotation, setRotation] = useState(0);
-  const [opacity, setOpacity] = useState(1);
 
   const imageSrc = 'https://i.postimg.cc/fRSJZP69/image.jpg'; // Используем тот же скин астрала
 
   useEffect(() => {
-    const animationDuration = (window.innerHeight + 100) / (speed * 50); // Adjust speed for visual effect
-    const startTime = Date.now();
-    const initialRotationSpeed = (Math.random() - 0.5) * 10; // Random rotation speed
+    let animationFrameId: number;
+    let currentY = -50; // Use a local variable for current position
+    let currentX = initialX;
+    let currentRotation = 0;
+    const rotationSpeed = (Math.random() - 0.5) * 10; // Random rotation speed for each particle
 
     const animate = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = elapsed / (animationDuration * 1000); // Convert to seconds
+      currentY += speed;
+      currentRotation += rotationSpeed;
 
-      if (yPos < window.innerHeight + 50) { // Stop when off-screen
-        setYPos(prevY => prevY + speed);
-        setRotation(prevRot => prevRot + initialRotationSpeed);
-        requestAnimationFrame(animate);
-      } else {
+      if (currentY > window.innerHeight + 50) {
         // Reset position to top for continuous falling
-        setYPos(-50);
-        setXPos(Math.random() * window.innerWidth);
-        setRotation(0);
-        setOpacity(1);
-        // Restart animation
-        requestAnimationFrame(animate);
+        currentY = -50;
+        currentX = Math.random() * window.innerWidth;
+        currentRotation = 0;
       }
+
+      setYPos(currentY);
+      setXPos(currentX);
+      setRotation(currentRotation);
+
+      animationFrameId = requestAnimationFrame(animate);
     };
 
-    requestAnimationFrame(animate);
-  }, [id, initialX, speed, yPos]); // Add yPos to dependencies to re-trigger when it goes off-screen
+    animationFrameId = requestAnimationFrame(animate);
+
+    // Cleanup function to cancel the animation frame when the component unmounts
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [id, initialX, speed]); // Dependencies should only be props that define the particle's initial behavior
 
   return (
     <img
@@ -53,8 +58,7 @@ const FallingCookie: React.FC<FallingCookieProps> = ({ id, initialX, speed }) =>
         top: yPos,
         width: '30px',
         height: '30px',
-        opacity: opacity,
-        transform: `rotate(${rotation}deg)`,
+        transform: `translate(-50%, -50%) rotate(${rotation}deg)`, // Center the image and apply rotation
         zIndex: 0, // Behind other elements
       }}
     />
