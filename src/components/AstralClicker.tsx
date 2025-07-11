@@ -16,7 +16,7 @@ import { initialUpgrades, initialCosmetics, allAchievements, UpgradeDefinition, 
 interface Particle {
   id: string;
   x: number;
-  y: number;
+  y: number; // Добавлено свойство 'y'
 }
 
 const AstralClicker: React.FC = () => {
@@ -36,7 +36,6 @@ const AstralClicker: React.FC = () => {
   const upgradesWithCurrentStats = initialUpgrades.map(upgradeDef => {
     const level = purchasedUpgradeLevels.get(upgradeDef.id) || 0;
     const currentCost = Math.floor(upgradeDef.baseCost * Math.pow(upgradeDef.costMultiplier, level));
-    // ИЗМЕНЕНИЕ ЗДЕСЬ: Эффект теперь линейно зависит от уровня
     const currentEffectValue = upgradeDef.baseEffectValue * level; 
     return {
       id: upgradeDef.id,
@@ -111,7 +110,6 @@ const AstralClicker: React.FC = () => {
     initialUpgrades.forEach(upgradeDef => {
       const level = purchasedUpgradeLevels.get(upgradeDef.id) || 0;
       if (level > 0) {
-        // ИЗМЕНЕНИЕ ЗДЕСЬ: Эффект теперь линейно зависит от уровня
         const effectValue = upgradeDef.baseEffectValue * level; 
         if (upgradeDef.type === 'click') {
           totalClickEffect += effectValue;
@@ -175,7 +173,7 @@ const AstralClicker: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen flex flex-col lg:flex-row text-gray-100 p-4 transition-all duration-500 ease-in-out relative overflow-hidden"
+      className="min-h-screen flex flex-col lg:flex-row text-gray-100 p-4 transition-all duration-500 ease-in-out relative"
       style={{
         backgroundImage: currentBackgroundValue !== 'none' ? `url(${currentBackgroundValue})` : 'none',
         backgroundSize: 'cover',
