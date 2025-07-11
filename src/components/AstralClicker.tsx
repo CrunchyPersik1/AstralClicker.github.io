@@ -7,7 +7,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UpgradeItem from './UpgradeItem';
 import CosmeticShop from './CosmeticShop';
 import ClickParticle from './ClickParticle';
-// FallingCookie теперь управляется FallingAstralBackground, поэтому импорт удален
 import AchievementsList from './AchievementsList';
 import { showSuccess, showError } from '@/utils/toast';
 import { initialUpgrades, initialCosmetics, allAchievements, UpgradeDefinition, Cosmetic, Achievement } from '@/lib/gameData';
@@ -30,10 +29,8 @@ const AstralClicker: React.FC = () => {
   const [unlockedAchievements, setUnlockedAchievements] = useState<Set<string>>(new Set());
 
   const [clickParticles, setClickParticles] = useState<Particle[]>([]);
-  // fallingCookiesCount state больше не нужен здесь, так как FallingAstralBackground управляет своими частицами
-  // const [fallingCookiesCount, setFallingCookiesCount] = useState<number>(0); // Удалена эта строка
 
-  const astralClickerRef = useRef<HTMLDivElement>(null); // Реф для основного контейнера AstralClicker
+  const astralClickerRef = useRef<HTMLDivElement>(null);
 
   // Вычисляем текущие характеристики улучшений
   const upgradesWithCurrentStats = initialUpgrades.map((upgradeDef) => {
@@ -53,10 +50,8 @@ const AstralClicker: React.FC = () => {
   const handleAstralClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAstralCount((prev) => prev + astralPerClick);
 
-    // Добавляем частицы клика
     if (astralClickerRef.current) {
       const containerRect = astralClickerRef.current.getBoundingClientRect();
-      // Координаты клика относительно контейнера AstralClicker
       const clickX = event.clientX - containerRect.left;
       const clickY = event.clientY - containerRect.top;
 
@@ -112,7 +107,6 @@ const AstralClicker: React.FC = () => {
     }
   };
 
-  // Эффект для пересчета общего Астрала за клик и Астрала в секунду
   useEffect(() => {
     let totalClickEffect = 0;
     let totalPassiveEffect = 0;
@@ -129,11 +123,10 @@ const AstralClicker: React.FC = () => {
       }
     });
 
-    setAstralPerClick(1 + totalClickEffect); // Базовый клик всегда 1
+    setAstralPerClick(1 + totalClickEffect);
     setAstralPerSecond(totalPassiveEffect);
-  }, [purchasedUpgradeLevels]); // Зависимость от Map с уровнями улучшений
+  }, [purchasedUpgradeLevels]);
 
-  // Пассивная генерация астрала
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (astralPerSecond > 0) {
@@ -144,15 +137,6 @@ const AstralClicker: React.FC = () => {
     return () => clearInterval(interval);
   }, [astralPerSecond]);
 
-  // Обновление количества падающих "печенек" в зависимости от astralPerSecond
-  // Этот эффект больше не нужен здесь, так как FallingAstralBackground управляет своими частицами
-  // useEffect(() => {
-  //   const maxFallingCookies = 100;
-  //   const newFallingCount = Math.min(astralPerSecond, maxFallingCookies);
-  //   setFallingCookiesCount(newFallingCount);
-  // }, [astralPerSecond]); // Удален этот эффект
-
-  // Проверка достижений
   useEffect(() => {
     const currentState = {
       astralCount,
@@ -184,7 +168,7 @@ const AstralClicker: React.FC = () => {
 
   return (
     <div
-      ref={astralClickerRef} {/* Применяем реф к основному контейнеру */}
+      ref={astralClickerRef}
       className="min-h-screen flex flex-col lg:flex-row text-gray-100 p-4 transition-all duration-500 ease-in-out relative"
       style={{
         backgroundImage: currentBackgroundValue !== 'none' ? `url(${currentBackgroundValue})` : 'none',
@@ -193,17 +177,6 @@ const AstralClicker: React.FC = () => {
         backgroundColor: currentBackgroundValue === 'none' ? 'black' : 'transparent',
       }}
     >
-      {/* Падающие "печеньки" - УДАЛЕНЫ ОТСЮДА, теперь в FallingAstralBackground */}
-      {/* {Array.from({ length: fallingCookiesCount }).map((_, index) => (
-        <FallingCookie
-          key={`falling-cookie-${index}`}
-          id={`falling-cookie-${index}`}
-          initialX={Math.random() * window.innerWidth}
-          speed={Math.random() * 2 + 1}
-        />
-      ))} */}
-
-      {/* Частицы клика */}
       {clickParticles.map((particle) => (
         <ClickParticle
           key={particle.id}
@@ -214,9 +187,7 @@ const AstralClicker: React.FC = () => {
         />
       ))}
 
-      {/* Левая секция: Кликер */}
       <div className="flex-1 flex flex-col items-center justify-center p-4 lg:w-1/3 z-10">
-        {/* Карточка счетчика Астрала */}
         <Card className="w-full max-w-md bg-gray-800/70 backdrop-blur-sm border-gray-700 shadow-lg rounded-lg p-6 mb-8 text-center">
           <CardTitle className="text-4xl font-bold text-purple-400 mb-2">Астрал: {Math.floor(astralCount)}</CardTitle>
           <p className="text-lg text-gray-300">
@@ -224,7 +195,6 @@ const AstralClicker: React.FC = () => {
           </p>
         </Card>
 
-        {/* Кнопка клика */}
         <Button
           onClick={handleAstralClick}
           className="relative w-64 h-64 lg:w-80 lg:h-80 bg-transparent hover:scale-105 transition-transform transform active:scale-95 shadow-2xl flex items-center justify-center overflow-hidden group"
@@ -241,7 +211,6 @@ const AstralClicker: React.FC = () => {
         </Button>
       </div>
 
-      {/* Правая секция: Улучшения, Косметика, Достижения */}
       <div className="flex-1 p-4 lg:w-2/3 lg:ml-8 z-10">
         <Tabs defaultValue="upgrades" className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-6 bg-gray-800/70 backdrop-blur-sm border-gray-700">
