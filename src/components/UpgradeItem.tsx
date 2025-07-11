@@ -17,32 +17,32 @@ interface Upgrade {
 
 interface UpgradeItemProps {
   upgrade: Upgrade;
-  currentMilk: number;
+  currentAstral: number;
   onPurchase: (upgradeId: string, cost: number, effect: Upgrade['effect']) => void;
 }
 
-const UpgradeItem: React.FC<UpgradeItemProps> = ({ upgrade, currentMilk, onPurchase }) => {
-  const canAfford = currentMilk >= upgrade.cost;
+const UpgradeItem: React.FC<UpgradeItemProps> = ({ upgrade, currentAstral, onPurchase }) => {
+  const canAfford = currentAstral >= upgrade.cost;
 
   return (
     <Card className="w-full max-w-sm bg-gray-700/70 backdrop-blur-sm border-gray-600 shadow-md rounded-lg">
       <CardHeader>
-        <CardTitle className="text-lg text-yellow-200">{upgrade.name}</CardTitle>
+        <CardTitle className="text-lg text-purple-300">{upgrade.name}</CardTitle>
         <CardDescription className="text-sm text-gray-300">{upgrade.description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <p className="text-md font-semibold mb-2 text-green-400">Стоимость: {upgrade.cost} молока</p>
+        <p className="text-md font-semibold mb-2 text-green-400">Стоимость: {upgrade.cost} Астрала</p>
         <p className="text-sm text-gray-200">
-          Эффект: {upgrade.effect.type === 'click' ? `+${upgrade.effect.value} молока за клик` : `+${upgrade.effect.value} молока в секунду`}
+          Эффект: {upgrade.effect.type === 'click' ? `+${upgrade.effect.value} Астрала за клик` : `+${upgrade.effect.value} Астрала в секунду`}
         </p>
       </CardContent>
       <CardFooter>
         <Button
           onClick={() => onPurchase(upgrade.id, upgrade.cost, upgrade.effect)}
           disabled={!canAfford}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-500 disabled:text-gray-300"
+          className="w-full bg-purple-600 hover:bg-purple-700 text-white disabled:bg-gray-500 disabled:text-gray-300"
         >
-          {canAfford ? 'Купить' : 'Недостаточно молока'}
+          {canAfford ? 'Купить' : 'Недостаточно Астрала'}
         </Button>
       </CardFooter>
     </Card>

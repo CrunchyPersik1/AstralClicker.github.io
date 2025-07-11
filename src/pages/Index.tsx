@@ -1,12 +1,12 @@
 "use client";
 
 import { MadeWithDyad } from "@/components/made-with-dyad";
-import MilkClicker from "@/components/MilkClicker"; // Импортируем MilkClicker
+import AstralClicker from "@/components/MilkClicker"; // Импортируем AstralClicker (переименован из MilkClicker)
 
 const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
-      <MilkClicker />
+      <AstralClicker />
       <MadeWithDyad />
     </div>
   );
