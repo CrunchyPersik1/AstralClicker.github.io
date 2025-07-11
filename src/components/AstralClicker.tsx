@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UpgradeItem from './UpgradeItem';
 import CosmeticShop from './CosmeticShop';
+import ClickParticle from './ClickParticle'; // Импортируем новый компонент
+import FallingCookie from './FallingCookie'; // Импортируем новый компонент
 import { showSuccess, showError } from '@/utils/toast';
 
 interface Upgrade {
@@ -60,21 +62,41 @@ const initialCosmetics: Cosmetic[] = [
 ];
 
 
+interface Particle {
+  id: string;
+  x: number;
+  y: number;
+}
+
 const AstralClicker: React.FC = () => {
   const [astralCount, setAstralCount] = useState<number>(0);
   const [astralPerClick, setAstralPerClick] = useState<number>(1);
   const [astralPerSecond, setAstralPerSecond] = useState<number>(0);
   const [purchasedUpgrades, setPurchasedUpgrades] = useState<Set<string>>(new Set());
-  const [purchasedCosmetics, setPurchasedCosmetics] = useState<Set<string>>(new Set(['bg_default', 'skin_default'])); // Default items are "purchased"
+  const [purchasedCosmetics, setPurchasedCosmetics] = useState<Set<string>>(new Set(['bg_default', 'skin_default']));
   const [activeBackground, setActiveBackground] = useState<string>('bg_default');
   const [activeClickerSkin, setActiveClickerSkin] = useState<string>('skin_default');
+
+  const [clickParticles, setClickParticles] = useState<Particle[]>([]);
+  const [fallingCookiesCount, setFallingCookiesCount] = useState<number>(0);
 
   const availableUpgrades = initialUpgrades.filter(
     (upgrade) => !purchasedUpgrades.has(upgrade.id)
   );
 
-  const handleAstralClick = () => {
+  const handleAstralClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAstralCount((prev) => prev + astralPerClick);
+
+    // Добавляем частицы клика
+    const newParticleId = `particle-${Date.now()}-${Math.random()}`;
+    setClickParticles((prev) => [
+      ...prev,
+      { id: newParticleId, x: event.clientX, y: event.clientY },
+    ]);
+  };
+
+  const handleParticleAnimationEnd = (id: string) => {
+    setClickParticles((prev) => prev.filter((p) => p.id !== id));
   };
 
   const handlePurchaseUpgrade = (upgradeId: string, cost: number, effect: Upgrade['effect']) => {
@@ -113,6 +135,7 @@ const AstralClicker: React.FC = () => {
     }
   };
 
+  // Пассивная генерация астрала
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (astralPerSecond > 0) {
@@ -123,13 +146,19 @@ const AstralClicker: React.FC = () => {
     return () => clearInterval(interval);
   }, [astralPerSecond]);
 
+  // Обновляем количество падающих "печенек" в зависимости от astralPerSecond
+  useEffect(() => {
+    const maxFallingCookies = 100;
+    const newFallingCount = Math.min(astralPerSecond, maxFallingCookies);
+    setFallingCookiesCount(newFallingCount);
+  }, [astralPerSecond]);
+
   const currentBackgroundValue = initialCosmetics.find(c => c.id === activeBackground)?.value || 'none';
   const currentClickerSkinValue = initialCosmetics.find(c => c.id === activeClickerSkin)?.value || 'https://i.postimg.cc/fRSJZP69/image.jpg';
 
-
   return (
     <div
-      className="min-h-screen flex flex-col lg:flex-row text-gray-100 p-4 transition-all duration-500 ease-in-out"
+      className="min-h-screen flex flex-col lg:flex-row text-gray-100 p-4 transition-all duration-500 ease-in-out relative overflow-hidden" // Добавлены relative и overflow-hidden
       style={{
         backgroundImage: currentBackgroundValue !== 'none' ? `url(${currentBackgroundValue})` : 'none',
         backgroundSize: 'cover',
@@ -137,9 +166,30 @@ const AstralClicker: React.FC = () => {
         backgroundColor: currentBackgroundValue === 'none' ? 'black' : 'transparent',
       }}
     >
-      {/* Left Section: Clicker */}
-      <div className="flex-1 flex flex-col items-center justify-center p-4 lg:w-1/3">
-        {/* Astral Count Card */}
+      {/* Падающие "печеньки" */}
+      {Array.from({ length: fallingCookiesCount }).map((_, index) => (
+        <FallingCookie
+          key={`falling-cookie-${index}`}
+          id={`falling-cookie-${index}`}
+          initialX={Math.random() * window.innerWidth}
+          speed={Math.random() * 2 + 1} // Случайная скорость от 1 до 3
+        />
+      ))}
+
+      {/* Частицы клика */}
+      {clickParticles.map((particle) => (
+        <ClickParticle
+          key={particle.id}
+          id={particle.id}
+          startX={particle.x}
+          startY={particle.y}
+          onComplete={handleParticleAnimationEnd}
+        />
+      ))}
+
+      {/* Левая секция: Кликер */}
+      <div className="flex-1 flex flex-col items-center justify-center p-4 lg:w-1/3 z-10"> {/* Добавлен z-10, чтобы контент был поверх частиц */}
+        {/* Карточка счетчика Астрала */}
         <Card className="w-full max-w-md bg-gray-800/70 backdrop-blur-sm border-gray-700 shadow-lg rounded-lg p-6 mb-8 text-center">
           <CardTitle className="text-4xl font-bold text-purple-400 mb-2">Астрал: {Math.floor(astralCount)}</CardTitle>
           <p className="text-lg text-gray-300">
@@ -147,7 +197,7 @@ const AstralClicker: React.FC = () => {
           </p>
         </Card>
 
-        {/* Click Button */}
+        {/* Кнопка клика */}
         <Button
           onClick={handleAstralClick}
           className="relative w-64 h-64 lg:w-80 lg:h-80 bg-transparent hover:scale-105 transition-transform transform active:scale-95 shadow-2xl flex items-center justify-center overflow-hidden group"
@@ -164,8 +214,8 @@ const AstralClicker: React.FC = () => {
         </Button>
       </div>
 
-      {/* Right Section: Upgrades & Cosmetics */}
-      <div className="flex-1 p-4 lg:w-2/3 lg:ml-8">
+      {/* Правая секция: Улучшения и Косметика */}
+      <div className="flex-1 p-4 lg:w-2/3 lg:ml-8 z-10"> {/* Добавлен z-10 */}
         <Tabs defaultValue="upgrades" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6 bg-gray-800/70 backdrop-blur-sm border-gray-700">
             <TabsTrigger value="upgrades" className="text-lg text-purple-300 data-[state=active]:bg-purple-600 data-[state=active]:text-white">Улучшения</TabsTrigger>
