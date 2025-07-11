@@ -5,7 +5,7 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 
 const Index = () => {
   return (
-    <div className="relative">
+    <div className="relative min-h-screen">
       <AstralClicker />
       <MadeWithDyad />
     </div>

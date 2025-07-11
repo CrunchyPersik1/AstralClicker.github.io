@@ -16,7 +16,7 @@ import { initialUpgrades, initialCosmetics, allAchievements, UpgradeDefinition, 
 interface Particle {
   id: string;
   x: number;
-  y: number; // Добавлено свойство 'y'
+  y: number;
 }
 
 const AstralClicker: React.FC = () => {
@@ -31,6 +31,8 @@ const AstralClicker: React.FC = () => {
 
   const [clickParticles, setClickParticles] = useState<Particle[]>([]);
   const [fallingCookiesCount, setFallingCookiesCount] = useState<number>(0);
+
+  const clickerButtonRef = useRef<HTMLButtonElement>(null); // Добавляем реф для кнопки
 
   // Вычисляем текущие характеристики улучшений
   const upgradesWithCurrentStats = initialUpgrades.map(upgradeDef => {
@@ -51,11 +53,17 @@ const AstralClicker: React.FC = () => {
     setAstralCount((prev) => prev + astralPerClick);
 
     // Добавляем частицы клика
-    const newParticleId = `particle-${Date.now()}-${Math.random()}`;
-    setClickParticles((prev) => [
-      ...prev,
-      { id: newParticleId, x: event.clientX, y: event.clientY },
-    ]);
+    if (clickerButtonRef.current) {
+      const rect = clickerButtonRef.current.getBoundingClientRect();
+      const clickX = event.clientX - rect.left;
+      const clickY = event.clientY - rect.top;
+
+      const newParticleId = `particle-${Date.now()}-${Math.random()}`;
+      setClickParticles((prev) => [
+        ...prev,
+        { id: newParticleId, x: clickX, y: clickY },
+      ]);
+    }
   };
 
   const handleParticleAnimationEnd = (id: string) => {
@@ -214,6 +222,7 @@ const AstralClicker: React.FC = () => {
 
         {/* Кнопка клика */}
         <Button
+          ref={clickerButtonRef} // Применяем реф к кнопке
           onClick={handleAstralClick}
           className="relative w-64 h-64 lg:w-80 lg:h-80 bg-transparent hover:scale-105 transition-transform transform active:scale-95 shadow-2xl flex items-center justify-center overflow-hidden group"
           style={{
