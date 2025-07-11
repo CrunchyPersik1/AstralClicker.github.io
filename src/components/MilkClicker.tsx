@@ -89,7 +89,7 @@ const AstralClicker: React.FC = () => {
           onClick={handleAstralClick}
           className="relative w-64 h-64 lg:w-80 lg:h-80 bg-transparent hover:scale-105 transition-transform transform active:scale-95 shadow-2xl flex items-center justify-center overflow-hidden group"
           style={{
-            backgroundImage: 'url("https://i.imgur.com/your_uploaded_image_id.jpg")', // <--- ЭТУ СТРОКУ НУЖНО ИЗМЕНИТЬ
+            backgroundImage: 'url("https://i.postimg.cc/fRSJZP69/image.jpg")', // <--- URL ИЗОБРАЖЕНИЯ ОБНОВЛЕН ЗДЕСЬ
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
             backgroundPosition: 'center',
