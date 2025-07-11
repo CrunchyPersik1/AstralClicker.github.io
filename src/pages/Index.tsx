@@ -89,7 +89,7 @@ const Index = () => {
   const currentClickerSkinValue = initialCosmetics.find(c => c.id === activeClickerSkin)?.value || 'https://i.postimg.cc/fRSJZP69/image.jpg';
 
   // Вычисляем achievementsWithStatus здесь
-  const achievementsWithStatus = allAchievements.map(ach => { // Изменено: убраны лишние скобки вокруг объекта
+  const achievementsWithStatus = allAchievements.map(ach => {
     return {
       ...ach,
       unlocked: unlockedAchievements.has(ach.id)
@@ -124,7 +124,7 @@ const Index = () => {
         setUnlockedAchievements={setUnlockedAchievements}
         upgradesWithCurrentStats={upgradesWithCurrentStats}
         currentClickerSkinValue={currentClickerSkinValue}
-        achievementsWithStatus={achievementsWithStatus} {/* Передаем новый пропс */}
+        achievementsWithStatus={achievementsWithStatus}
       />
       <MadeWithDyad />
     </div>
